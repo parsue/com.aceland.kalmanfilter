@@ -2,26 +2,23 @@ using System.Collections.Generic;
 
 namespace Aceland.KalmanFilter.Core
 {
-    internal abstract class KalmanFilterBase<T> : IKalmanFilter<T>
-        where T : unmanaged
+    internal abstract class KalmanFilterBase<T> : IKalmanFilter<T> where T : unmanaged
     {
-        internal KalmanFilterBase(float q, float r, float p)
+        protected KalmanFilterBase(float q, float r, float p)
         {
             Q = q;
             R = r;
             P = p;
+            K = 0f;
         }
 
-        private protected float Q;  // the covariance of the process noise, default 0.000001
-        private protected float R;  // the covariance of the observation noise, default 0.001
-        private protected float P;  // last prediction with R
-        private protected float K;  // last prediction
-        private protected T X;      // last result
+        protected float Q;
+        protected float R;
+        protected float P;
+        protected float K;
+        protected T X;
 
-        public (T x, float p, float k) GetCurrentValues()
-        {
-            return (X, P, K);
-        }
+        public (T x, float p, float k) GetCurrentValues() => (X, P, K);
 
         public void SetValues(T x, float p, float k)
         {
@@ -30,21 +27,15 @@ namespace Aceland.KalmanFilter.Core
             K = k;
         }
 
-        public virtual T Update(T measurement, float? newQ = null, float? newR = null)
-        {
-            return default;
-        }
+        public virtual T Update(T measurement, float? newQ = null, float? newR = null) => default;
 
-        public virtual T Update(List<T> measurements, bool areMeasurementsNewestFirst = false, float? newQ = null, float? newR = null)
-        {
-            return default;
-        }
+        public virtual T Update(List<T> measurements, bool areMeasurementsNewestFirst = false, float? newQ = null, float? newR = null) => default;
 
         public virtual void Reset()
         {
-            P = 1;
+            P = 1f;
+            K = 0f;
             X = default;
-            K = 0;
         }
     }
 }
