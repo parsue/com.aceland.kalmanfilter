@@ -8,6 +8,9 @@ namespace Aceland.KalmanFilter
         where TValue : unmanaged
         where TAdapter : struct, IKalmanValueAdapter<TValue>
     {
+        public BurstKalmanFilter<TValue, TAdapter> Build(TAdapter ops) => 
+            new(1e-6f, 1e-3f, 1f, ops);
+
         public BurstKalmanFilter<TValue, TAdapter> Build(float q, float r, float p, TAdapter ops) => 
             new(q, r, p, ops);
 
