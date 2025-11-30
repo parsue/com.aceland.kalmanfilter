@@ -8,14 +8,10 @@ namespace Aceland.KalmanFilter
         where TValue : unmanaged
         where TAdapter : struct, IKalmanValueAdapter<TValue>
     {
-        private float _q;
-        private float _r;
-        private float _p;
-        private float _k;
-        private TValue _x;
-        private TAdapter _ops;
+        public BurstKalmanFilter<TValue, TAdapter> Build(float q, float r, float p, TAdapter ops) => 
+            new(q, r, p, ops);
 
-        public BurstKalmanFilter(float q, float r, float p, TAdapter ops)
+        private BurstKalmanFilter(float q, float r, float p, TAdapter ops)
         {
             _q = q;
             _r = r;
@@ -24,6 +20,13 @@ namespace Aceland.KalmanFilter
             _x = ops.Zero;
             _ops = ops;
         }
+        
+        private float _q;
+        private float _r;
+        private float _p;
+        private float _k;
+        private TValue _x;
+        private TAdapter _ops;
 
         public TValue Update(TValue measurement, float? newQ = null, float? newR = null)
         {
