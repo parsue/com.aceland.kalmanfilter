@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+---
+
+## [2.1.1] - 2025-12-06
+### Modified
+- [package.json] add doc links
+
 ## [2.0.10] - 2025-11-30
 ### Fixed
 - [Version] fixing version in OpenUPM
