@@ -4,11 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.2.1] - 2025-12-13
+### Added
+- all meta files
+
 ## [2.2.0] - 2025-12-13
 ### Removed
 - all meta files
 
-## [2.1.1] - 2025-12-06
+## [2.0.11] - 2025-12-06
 ### Modified
 - [package.json] add doc links
 
