@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using Aceland.KalmanFilter.Contracts;
+using Unity.Burst;
 
 namespace Aceland.KalmanFilter.Core
 {
-    internal abstract class KalmanFilterBase<T> : IKalmanFilter<T> where T : unmanaged
+    [BurstCompile]
+    public abstract class KalmanFilterBase<T> : IKalmanFilter<T> where T : struct
     {
         protected KalmanFilterBase(float q, float r, float p)
         {

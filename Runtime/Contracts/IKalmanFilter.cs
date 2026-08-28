@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 
-namespace Aceland.KalmanFilter
+namespace Aceland.KalmanFilter.Contracts
 {
-    public interface IKalmanFilter<T> where T : unmanaged
+    public interface IKalmanFilter<T> where T : struct
     {
         (T x, float p, float k) GetCurrentValues();
         void SetValues(T x, float p, float k);

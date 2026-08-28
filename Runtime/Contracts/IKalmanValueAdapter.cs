@@ -1,6 +1,6 @@
-﻿namespace Aceland.KalmanFilter
+﻿namespace Aceland.KalmanFilter.Contracts
 {
-    public interface IKalmanValueAdapter<T> where T : unmanaged
+    public interface IKalmanValueAdapter<T> where T : struct
     {
         T Zero { get; }
         T Add(T left, T right);

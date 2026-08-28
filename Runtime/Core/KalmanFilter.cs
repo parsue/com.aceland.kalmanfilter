@@ -1,20 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using Aceland.KalmanFilter.Contracts;
+using Unity.Burst;
 using UnityEngine;
 
 namespace Aceland.KalmanFilter.Core
 {
-    internal sealed class KalmanFilter<T> : KalmanFilterBase<T> where T : unmanaged
+    [BurstCompile]
+    public sealed class KalmanFilter<T> : KalmanFilterBase<T> where T : struct
     {
         private readonly IKalmanValueAdapter<T> _ops;
 
         internal static KalmanFilter<T> Build(
+            IKalmanValueAdapter<T> adapter,
             float q = 1e-6f,
             float r = 1e-3f,
-            float p = 1f,
-            IKalmanValueAdapter<T> adapter = null)
+            float p = 1f)
         {
-            var ops = adapter ?? KalmanValueAdapterCache<T>.GetOrThrow();
+            var ops = adapter;
             return new KalmanFilter<T>(q, r, p, ops);
         }
 
