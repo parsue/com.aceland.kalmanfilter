@@ -4,7 +4,7 @@ using Unity.Burst;
 namespace Aceland.KalmanFilter.Adapters
 {
     [BurstCompile]
-    internal struct FloatAdapter : IKalmanValueAdapter<float>
+    public readonly struct FloatAdapter : IKalmanValueAdapter<float>
     {
         public float Zero => 0f;
         public float Add(float left, float right) => left + right;

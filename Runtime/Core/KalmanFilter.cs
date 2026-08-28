@@ -1,75 +1,109 @@
-﻿using System;
-using System.Collections.Generic;
-using Aceland.KalmanFilter.Contracts;
+﻿using Aceland.KalmanFilter.Contracts;
 using Unity.Burst;
-using UnityEngine;
+using Unity.Collections;
 
 namespace Aceland.KalmanFilter.Core
 {
+    /// <summary>
+    /// A blittable, Burst-compatible scalar Kalman filter.
+    /// The value math is provided by <typeparamref name="TAdapter"/>, a value-type strategy that is
+    /// resolved at compile time (no interface dispatch, no boxing), so the whole struct can live inside
+    /// Burst-compiled Jobs, ECS <c>ISystem</c>s, or plain managed code without any GC allocation.
+    /// </summary>
+    /// <typeparam name="T">The unmanaged value type being filtered (float, float2, Vector3, ...).</typeparam>
+    /// <typeparam name="TAdapter">The value-type adapter that implements the arithmetic for <typeparamref name="T"/>.</typeparam>
     [BurstCompile]
-    public sealed class KalmanFilter<T> : KalmanFilterBase<T> where T : struct
+    public struct KalmanFilter<T, TAdapter> : IKalmanFilter<T>
+        where T : unmanaged
+        where TAdapter : unmanaged, IKalmanValueAdapter<T>
     {
-        private readonly IKalmanValueAdapter<T> _ops;
+        private TAdapter _ops;
 
-        internal static KalmanFilter<T> Build(
-            IKalmanValueAdapter<T> adapter,
+        private float _q;
+        private float _r;
+        private float _p;
+        private float _k;
+        private T _x;
+
+        internal static KalmanFilter<T, TAdapter> Build(
+            TAdapter adapter,
             float q = 1e-6f,
             float r = 1e-3f,
             float p = 1f)
         {
-            var ops = adapter;
-            return new KalmanFilter<T>(q, r, p, ops);
+            return new KalmanFilter<T, TAdapter>
+            {
+                _ops = adapter,
+                _q = q,
+                _r = r,
+                _p = p,
+                _k = 0f,
+                _x = adapter.Zero,
+            };
         }
 
-        private KalmanFilter(float q, float r, float p, IKalmanValueAdapter<T> ops)
-            : base(q, r, p)
+        public (T x, float p, float k) GetCurrentValues() => (_x, _p, _k);
+
+        public void SetValues(T x, float p, float k)
         {
-            _ops = ops;
-            X = ops.Zero;
+            _x = x;
+            _p = p;
+            _k = k;
         }
 
-        public override T Update(T measurement, float? newQ = null, float? newR = null)
+        /// <summary>
+        /// Feeds a single measurement and returns the filtered estimate.
+        /// Pass <see cref="float.NaN"/> (the default) to keep the current noise values unchanged.
+        /// </summary>
+        public T Update(T measurement, float newQ = float.NaN, float newR = float.NaN)
         {
-            if (newQ.HasValue && !Mathf.Approximately(Q, newQ.Value)) Q = newQ.Value;
-            if (newR.HasValue && !Mathf.Approximately(R, newR.Value)) R = newR.Value;
+            if (!float.IsNaN(newQ)) _q = newQ;
+            if (!float.IsNaN(newR)) _r = newR;
 
-            var innovationCovariance = P + Q + R;
+            var innovationCovariance = _p + _q + _r;
             if (innovationCovariance == 0f)
-                return X;
+                return _x;
 
-            K = (P + Q) / innovationCovariance;
-            P = R * K;
+            _k = (_p + _q) / innovationCovariance;
+            _p = _r * _k;
 
-            var innovation = _ops.Subtract(measurement, X);
-            var correction = _ops.Scale(innovation, K);
-            X = _ops.Add(X, correction);
+            var innovation = _ops.Subtract(measurement, _x);
+            var correction = _ops.Scale(innovation, _k);
+            _x = _ops.Add(_x, correction);
 
-            return X;
+            return _x;
         }
 
-        public override T Update(List<T> measurements, bool areMeasurementsNewestFirst = false, float? newQ = null, float? newR = null)
+        /// <summary>
+        /// Feeds a batch of measurements from a <see cref="NativeArray{T}"/> (Job / Burst friendly) and
+        /// returns the final filtered estimate. Measurements are processed from index 0 upward unless
+        /// <paramref name="areMeasurementsNewestFirst"/> is <c>true</c>.
+        /// </summary>
+        public T Update(NativeArray<T> measurements, bool areMeasurementsNewestFirst = false,
+            float newQ = float.NaN, float newR = float.NaN)
         {
-            if (measurements == null || measurements.Count == 0)
-                throw new ArgumentException("Measurements list is null or empty.", nameof(measurements));
+            if (measurements.Length == 0)
+                return _x;
 
-            var result = X;
             if (areMeasurementsNewestFirst)
             {
-                for (var i = measurements.Count - 1; i >= 0; --i)
-                    result = Update(measurements[i], newQ, newR);
+                for (var i = measurements.Length - 1; i >= 0; --i)
+                    Update(measurements[i], newQ, newR);
             }
             else
             {
-                for (var i = 0; i < measurements.Count; ++i)
-                    result = Update(measurements[i], newQ, newR);
+                for (var i = 0; i < measurements.Length; ++i)
+                    Update(measurements[i], newQ, newR);
             }
-            return result;
+
+            return _x;
         }
 
-        public override void Reset()
+        public void Reset()
         {
-            base.Reset();
-            X = _ops.Zero;
+            _p = 1f;
+            _k = 0f;
+            _x = _ops.Zero;
         }
     }
 }

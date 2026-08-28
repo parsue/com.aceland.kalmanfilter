@@ -6,7 +6,7 @@ using Unity.Mathematics;
 namespace Aceland.KalmanFilter.Adapters
 {
     [BurstCompile]
-    internal struct Float2Adapter : IKalmanValueAdapter<float2>
+    public readonly struct Float2Adapter : IKalmanValueAdapter<float2>
     {
         public float2 Zero => float2.zero;
         public float2 Add(float2 left, float2 right) => left + right;

@@ -5,7 +5,16 @@ All notable changes to this project will be documented in this file.
 ---
 
 ## [3.0.0] - 2026-8-28
-### 
+### Changed (Breaking)
+- [Kalman Filter] reworked into a blittable `struct KalmanFilter<T, TAdapter>` - now fully Burst / Jobs / ECS compatible with zero managed allocation and no virtual dispatch.
+- [Value Adapter] constraint changed from `struct` to `unmanaged`; all built-in adapters are now `public readonly struct` so they can be used as the `TAdapter` generic argument.
+- [IKalmanFilter] batch `Update` now takes a `NativeArray<T>` instead of `List<T>`; single `Update` uses `float.NaN` sentinels instead of `float?` for optional noise values.
+- [Factory] `Kalman.CreateXxxFilter()` now return the concrete `KalmanFilter<T, TAdapter>` value type. Custom types use `Kalman.Create<T, TAdapter>(adapter)`.
+### Added
+- [Jobs] `KalmanBatchJob<T, TAdapter>` - a ready-to-use `IJobParallelFor` running one filter per element, with `RegisterGenericJobType` pre-registered for all built-in value types.
+- [Dependencies] com.unity.collections for `NativeArray` support.
+### Removed
+- [Core] `KalmanFilterBase<T>` abstract class (no longer needed for a value-type design).
 
 ## [2.2.1] - 2025-12-13
 ### Added

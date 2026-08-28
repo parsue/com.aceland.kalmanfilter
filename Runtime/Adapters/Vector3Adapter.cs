@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Aceland.KalmanFilter.Adapters
 {
     [BurstCompile]
-    internal struct Vector3Adapter : IKalmanValueAdapter<Vector3>
+    public readonly struct Vector3Adapter : IKalmanValueAdapter<Vector3>
     {
         public Vector3 Zero => Vector3.zero;
         public Vector3 Add(Vector3 left, Vector3 right) => left + right;
